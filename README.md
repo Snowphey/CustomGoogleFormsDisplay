@@ -54,10 +54,29 @@ Le fichier JSON doit être un tableau d'objets, chaque objet représentant une q
   }
 ]
 ```
+
 - `number` : (optionnel) numéro de la question
 - `question` : texte de la question
 - `choices` : (optionnel) tableau de choix possibles
 - `multiple` : (optionnel) true si cases à cocher, false si bouton radio
+- `chartType` : (optionnel) permet de forcer le type de rendu graphique pour la question.
+  - **Valeurs possibles :**
+    - `"pie"` : camembert
+    - `"bar"` : barres horizontales
+    - `"bar-vertical"` : barres verticales
+    - `"text"` : désactive tout graphique, affiche uniquement les réponses en texte brut
+
+Si la propriété n'est pas précisée, le type de graphique est déterminé automatiquement selon la question et les réponses.
+
+Exemple pour forcer l'affichage texte :
+
+```json
+{
+  "question": "Votre question ici",
+  "chartType": "text"
+}
+```
+
 
 ## Fonctionnalités
 - Prise en charge des questions à choix unique, multiple, dates, texte libre

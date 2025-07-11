@@ -189,6 +189,8 @@ app.get('/index', async (req, res) => {
         [values[i], values[j]] = [values[j], values[i]];
       }
       let type = detectTypeSmart(q, values);
+      // Si le JSON contient un type de graphique forcé, on l'applique
+      let forcedChartType = q && q.chartType ? q.chartType : null;
       // Préparation des données pour le graphique
       let chartData = null;
       if (q && Array.isArray(q.choices)) {
@@ -208,12 +210,12 @@ app.get('/index', async (req, res) => {
             });
           });
           chartData = {
-            chartType: allNumeric ? 'bar-vertical' : 'bar',
+            chartType: forcedChartType || (allNumeric ? 'bar-vertical' : 'bar'),
             labels: sortedChoices,
             data: sortedChoices.map(c => counts[c]),
             totalRespondents: values.length
           };
-          type = 'multiple';
+          type = forcedChartType ? 'multiple' : 'multiple';
         } else {
           // Single: camembert ou barres si numérique logique
           const counts = {};
@@ -222,12 +224,12 @@ app.get('/index', async (req, res) => {
             if (counts.hasOwnProperty(v)) counts[v]++;
           });
           chartData = {
-            chartType: allNumeric ? 'bar-vertical' : 'pie',
+            chartType: forcedChartType || (allNumeric ? 'bar-vertical' : 'pie'),
             labels: sortedChoices,
             data: sortedChoices.map(c => counts[c]),
             totalRespondents: values.length
           };
-          type = allNumeric ? 'single-bar' : 'single';
+          type = forcedChartType ? 'single' : (allNumeric ? 'single-bar' : 'single');
         }
       } else if (type === 'date') {
         // Regroupe les dates par mois/année et liste les jours
@@ -263,7 +265,7 @@ app.get('/index', async (req, res) => {
             return { label, days: dateGroups[label].sort((a,b)=>a-b), sortKey };
           })
           .sort((a, b) => a.sortKey - b.sortKey);
-        results.push({ question: key, type: 'date', values: dateArr });
+        results.push({ question: key, type: forcedChartType ? forcedChartType : 'date', values: dateArr });
         chartDataList.push(null);
         return;
       } else {
@@ -275,7 +277,18 @@ app.get('/index', async (req, res) => {
         });
         // Si au moins une réponse apparaît 3 fois ou plus, on affiche un bar chart
         const hasDuplicates = Object.values(counts).some(c => c > 3);
-        if (hasDuplicates) {
+        if (forcedChartType === 'text') {
+          chartData = null;
+          type = 'text';
+        } else if (forcedChartType) {
+          chartData = {
+            chartType: forcedChartType,
+            labels: Object.keys(counts),
+            data: Object.values(counts),
+            totalRespondents: values.length
+          };
+          type = forcedChartType;
+        } else if (hasDuplicates) {
           chartData = {
             chartType: 'bar-vertical',
             labels: Object.keys(counts),
