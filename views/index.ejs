@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Résultats du questionnaire</title>
+  <style>
+    /* Fond général dégradé */
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0;
+      background: linear-gradient(120deg, #e0e7ff 0%, #f7f7f7 100%);
+      min-height: 100vh;
+    }
+    /* Carte centrale */
+    .container {
+      max-width: 1100px;
+      margin: 40px auto 40px auto;
+      background: #fff;
+      padding: 38px 32px 32px 32px;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px 0 rgba(60,80,180,0.10), 0 1.5px 8px #0001;
+      border: 1.5px solid #e3e8f7;
+    }
+    /* Titre principal */
+    h1 {
+      color: #2a3a6c;
+      font-size: 2.5em;
+      text-align: center;
+      margin-bottom: 32px;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 8px #b3c6ff33;
+      font-weight: 700;
+    }
+    /* Bloc question */
+    .question {
+      margin-bottom: 48px;
+      padding: 28px 22px 22px 22px;
+      background: linear-gradient(90deg, #f5f8ff 60%, #f7f7fa 100%);
+      border-radius: 14px;
+      box-shadow: 0 2px 12px #b3c6ff18;
+      border: 1px solid #e3e8f7;
+      transition: box-shadow 0.2s;
+      position: relative;
+    }
+    .question:not(:last-child)::after {
+      content: "";
+      display: block;
+      position: absolute;
+      left: 30px; right: 30px; bottom: -24px;
+      height: 1.5px;
+      background: linear-gradient(90deg, #e3e8f7 0%, #fff 100%);
+      border-radius: 1px;
+      opacity: 0.7;
+    }
+    .question:hover {
+      box-shadow: 0 6px 24px #b3c6ff33;
+    }
+    .question h2 {
+      font-size: 1.25em;
+      color: #2a3a6c;
+      margin-bottom: 16px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+    /* Réponses texte */
+    .answers {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      background: none;
+      padding: 0;
+      max-height: 450px;
+      overflow-y: auto;
+    }
+    .answers > div {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+    .answers > div > div {
+      background: linear-gradient(90deg, #e3f0ff 60%, #f7f7fa 100%);
+      border-radius: 10px;
+      padding: 13px 18px;
+      box-shadow: 0 1.5px 8px #b3c6ff22;
+      font-size: 1.08em;
+      color: #2a3a6c;
+      word-break: break-word;
+      width: 100%;
+      max-width: 100%;
+      border: 1px solid #e3e8f7;
+      transition: box-shadow 0.2s;
+    }
+    .answers > div > div:hover {
+      box-shadow: 0 4px 16px #b3c6ff33;
+      background: #e0eaff;
+    }
+    /* Graphiques */
+    .chart-canvas {
+      display: block;
+      margin: 24px auto 10px auto;
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 1.5px 8px #b3c6ff22;
+      border: 1px solid #e3e8f7;
+    }
+    .chart-bar { width: 900px; max-width: 100%; }
+    .chart-pie, .chart-line { width: 700px; max-width: 100%; }
+    /* Sélecteur de couleur */
+    #themeColor, #themeColorHex {
+      border-radius: 8px;
+      box-shadow: 0 1px 4px #b3c6ff22;
+      border: 1px solid #e3e8f7;
+      background: #f5f8ff;
+      transition: box-shadow 0.2s;
+    }
+    #themeColor:focus, #themeColorHex:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px #4285F4aa;
+    }
+    #themeColor {
+      width: 44px; height: 34px; vertical-align: middle; cursor: pointer;
+      margin-right: 8px;
+    }
+    #themeColorHex {
+      width: 90px; height: 34px; vertical-align: middle; font-size: 1em; text-transform:uppercase;
+      margin-left: 8px;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    label[for="themeColor"] {
+      font-size: 1.08em;
+      color: #2a3a6c;
+      margin-right: 10px;
+      font-weight: 500;
+    }
+    /* Responsive */
+    @media (max-width: 800px) {
+      .container { padding: 12px 4vw; }
+      .chart-bar, .chart-pie, .chart-line { width: 98vw; min-width: 0; }
+      .question { padding: 18px 6px 14px 6px; }
+    }
+    @media (max-width: 500px) {
+      h1 { font-size: 1.3em; }
+      .container { padding: 2vw; }
+      .question { padding: 10px 2px 8px 2px; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Résultats du questionnaire</h1>
+    <div style="margin-bottom: 28px; display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;">
+      <a href="/config" style="background-color:<%= themeColor %>;color:#fff;padding:8px 18px;border-radius:7px;text-decoration:none;font-weight:600;box-shadow:0 1.5px 8px #b3c6ff22;margin-right:18px;">Configurer</a>
+      <label for="themeColor"><b>Couleur du thème :</b></label>
+      <input type="color" id="themeColor" value="<%= themeColor %>">
+      <input type="text" id="themeColorHex" maxlength="7" value="<%= themeColor %>" pattern="#?[0-9A-Fa-f]{6}">
+      <label for="lightenPercent" style="margin-left:18px;"><b>Éclaircissement :</b></label>
+      <input type="range" id="lightenPercent" min="0" max="100" value="50" style="width:100px;vertical-align:middle;">
+      <span id="lightenPercentValue">50%</span>
+    </div>
+    <% results.forEach((r, idx) => { %>
+      <div class="question">
+        <h2><%= r.question %></h2>
+        <% if (r.type === 'date' && Array.isArray(r.values)) { %>
+          <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 18px;">
+            <% r.values.forEach((dateGroup) => { %>
+              <div style="display: flex; align-items: center; gap: 18px;">
+                <div style="min-width: 110px; color: #2a3a6c; font-weight: 500; font-size: 1.08em; text-align: right;">
+                  <%= dateGroup.label %>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                  <% Array.isArray(dateGroup.days) && dateGroup.days.forEach((d) => { %>
+                    <span style="background: #e0f2ff; color: #2a3a6c; font-weight: 600; border-radius: 50px; padding: 6px 16px; font-size: 1.08em; box-shadow: 0 1.5px 8px #b3c6ff22; border: 1px solid #e3e8f7; display: inline-block; margin-bottom: 2px;">
+                      <%= d %>
+                    </span>
+                  <% }) %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } else if (chartDataList[idx]) { %>
+          <% const typeClass = (chartDataList[idx].chartType === 'bar' || chartDataList[idx].chartType === 'bar-vertical') ? 'chart-bar' : (chartDataList[idx].chartType === 'pie' ? 'chart-pie' : 'chart-line'); %>
+          <canvas class="chart-canvas <%= typeClass %>" id="chart-<%= idx %>" height="<%= (chartDataList[idx].chartType === 'bar' || chartDataList[idx].chartType === 'bar-vertical') ? Math.max(140, 28 * chartDataList[idx].labels.length) : 400 %>" width="<%= (chartDataList[idx].chartType === 'bar' || chartDataList[idx].chartType === 'bar-vertical') ? 900 : (chartDataList[idx].chartType === 'pie' ? 700 : 400) %>"></canvas>
+        <% } %>
+        <% if (r.type === 'text' && !(chartDataList[idx] && chartDataList[idx].chartType === 'pie') && Array.isArray(r.values)) { %>  
+          <div class="answers">
+            <% r.values.forEach((v) => { %>
+              <div>
+                <div>
+                  <%- v.replace(/\n/g, '<br>') %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    <% }) %>
+  </div>
+  <script>
+    const chartDataList = <%- JSON.stringify(chartDataList) %>;
+    let themeColor = '<%= themeColor %>';
+    let lightenPercent = parseInt(localStorage.getItem('lightenPercent') || '50', 10);
+    document.addEventListener('DOMContentLoaded', function() {
+      const colorInput = document.getElementById('themeColor');
+      const hexInput = document.getElementById('themeColorHex');
+      const lightenInput = document.getElementById('lightenPercent');
+      const lightenValue = document.getElementById('lightenPercentValue');
+      // Fonction pour éclaircir une couleur hexadécimale
+      function lightenColor(hex, percent) {
+        hex = hex.replace('#', '');
+        if (hex.length === 3) hex = hex.split('').map(x => x + x).join('');
+        const num = parseInt(hex, 16);
+        let r = (num >> 16) + Math.round((255 - (num >> 16)) * percent);
+        let g = ((num >> 8) & 0x00FF) + Math.round((255 - ((num >> 8) & 0x00FF)) * percent);
+        let b = (num & 0x0000FF) + Math.round((255 - (num & 0x0000FF)) * percent);
+        r = Math.min(255, r); g = Math.min(255, g); b = Math.min(255, b);
+        return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+      }
+      function setBackgroundFromTheme() {
+        document.body.style.background = `linear-gradient(120deg, ${lightenColor(themeColor, lightenPercent/100)} 0%, #f7f7f7 100%)`;
+      }
+      setBackgroundFromTheme();
+      colorInput.value = themeColor;
+      hexInput.value = themeColor.toUpperCase();
+      lightenInput.value = lightenPercent;
+      lightenValue.textContent = lightenPercent + '%';
+      // Synchronisation color -> hex
+      colorInput.addEventListener('input', function(e) {
+        themeColor = e.target.value;
+        setBackgroundFromTheme();
+        hexInput.value = themeColor.toUpperCase();
+        window.updateChartsTheme && window.updateChartsTheme();
+      });
+      // Synchronisation hex -> color
+      hexInput.addEventListener('input', function(e) {
+        let val = e.target.value.trim();
+        if (!val.startsWith('#')) val = '#' + val;
+        if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+          themeColor = val;
+          colorInput.value = val;
+          setBackgroundFromTheme();
+          window.updateChartsTheme && window.updateChartsTheme();
+        }
+      });
+      // Slider éclaircissement
+      lightenInput.addEventListener('input', function(e) {
+        lightenPercent = parseInt(e.target.value, 10);
+        lightenValue.textContent = lightenPercent + '%';
+        setBackgroundFromTheme();
+      });
+    });
+    // Stocker les instances de graphiques pour mise à jour
+    const chartInstances = [];
+    chartDataList.forEach((data, idx) => {
+      if (!data) return;
+      const canvas = document.getElementById('chart-' + idx);
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let options = {};
+      let chartType = data.chartType === 'bar-vertical' ? 'bar' : data.chartType;
+      let datasets = [{
+        label: 'Réponses',
+        data: data.data,
+        backgroundColor: (data.chartType === 'pie') ? [
+          '#4285F4','#EA4335','#FBBC05','#34A853','#A142F4','#F44292','#00B8D9','#FF7043','#9CCC65','#FFD600','#8D6E63','#789262','#C62828','#00897B','#6D4C41','#FFB300','#7E57C2','#43A047','#F4511E','#3949AB','#C0CA33','#5C6BC0'
+        ] : themeColor,
+        borderRadius: (data.chartType === 'bar' || data.chartType === 'bar-vertical') ? 6 : 0,
+        borderSkipped: (data.chartType === 'bar' || data.chartType === 'bar-vertical') ? false : undefined,
+        borderColor: data.chartType === 'line' ? themeColor : undefined,
+        barThickness: (data.chartType === 'bar' || data.chartType === 'bar-vertical') ? 18 : undefined,
+        categoryPercentage: (data.chartType === 'bar' || data.chartType === 'bar-vertical') ? 0.7 : undefined
+      }];
+      if (data.chartType === 'bar') {
+        options = {
+          indexAxis: 'y',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const v = context.parsed.x;
+                  const total = data.totalRespondents;
+                  const percent = ((v / total) * 100).toFixed(1).replace('.', ',');
+                  return `${context.label}: ${v} (${percent} %)`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: { beginAtZero: true, max: Math.max(...data.data) + 1 }
+          }
+        };
+        // Affiche à droite de chaque barre le nombre et le pourcentage
+        options.plugins = options.plugins || {};
+        options.plugins.customLabels = {
+          afterDatasetsDraw(chart) {
+            const {ctx} = chart;
+            const meta = chart.getDatasetMeta(0);
+            const total = data.totalRespondents;
+            ctx.save();
+            meta.data.forEach((bar, i) => {
+              const v = data.data[i];
+              const percent = ((v / total) * 100).toFixed(1).replace('.', ',');
+              const label = `${v} (${percent} %)`;
+              ctx.font = 'bold 13px Arial';
+              ctx.fillStyle = '#333';
+              ctx.textAlign = 'left';
+              ctx.textBaseline = 'middle';
+              ctx.fillText(label, bar.x + 8, bar.y);
+            });
+            ctx.restore();
+          }
+        };
+      } else if (data.chartType === 'bar-vertical') {
+        options = {
+          indexAxis: 'x',
+          layout: { padding: { top: 30 } }, // Ajout d'un padding en haut pour éviter que les labels soient coupés
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const v = context.parsed.y;
+                  const total = data.totalRespondents;
+                  const percent = ((v / total) * 100).toFixed(1).replace('.', ',');
+                  return `${context.label}: ${v} (${percent} %)`;
+                }
+              }
+            },
+            customLabels: {
+              afterDatasetsDraw(chart) {
+                const {ctx} = chart;
+                const meta = chart.getDatasetMeta(0);
+                const total = data.totalRespondents;
+                ctx.save();
+                meta.data.forEach((bar, i) => {
+                  const v = data.data[i];
+                  const percent = ((v / total) * 100).toFixed(1).replace('.', ',');
+                  const label = `${v} (${percent} %)`;
+                  ctx.font = 'bold 13px Arial';
+                  ctx.fillStyle = '#333';
+                  ctx.textAlign = 'center';
+                  ctx.textBaseline = 'bottom';
+                  ctx.fillText(label, bar.x, bar.y - 6);
+                });
+                ctx.restore();
+              }
+            }
+          },
+          scales: {
+            y: { beginAtZero: true }
+          }
+        };
+      } else if (data.chartType === 'pie') {
+        options = {
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const v = context.parsed;
+                  const total = data.data.reduce((a, b) => a + b, 0);
+                  const percent = total ? ((v / total) * 100).toFixed(1).replace('.', ',') : '0,0';
+                  return `${context.label}: ${v} (${percent} %)`;
+                }
+              }
+            },
+            legend: {
+              position: 'right'
+            },
+            customPieLabels: {
+              afterDatasetsDraw(chart) {
+                const {ctx} = chart;
+                const meta = chart.getDatasetMeta(0);
+                const total = data.data.reduce((a, b) => a + b, 0);
+                ctx.save();
+                meta.data.forEach((arc, i) => {
+                  const v = data.data[i];
+                  const percent = total ? (v / total) * 100 : 0;
+                  if (percent > 10) {
+                    const angle = (arc.startAngle + arc.endAngle) / 2;
+                    const radius = arc.outerRadius * 0.7;
+                    const x = arc.x + Math.cos(angle) * radius;
+                    const y = arc.y + Math.sin(angle) * radius;
+                    ctx.font = 'bold 15px Arial';
+                    ctx.fillStyle = '#fff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(percent.toFixed(1).replace('.', ',') + ' %', x, y);
+                  }
+                });
+                ctx.restore();
+              }
+            }
+          },
+          layout: {
+            padding: 0
+          },
+          radius: 180
+        };
+      } else if (data.chartType === 'line') {
+        datasets[0].fill = false;
+        datasets[0].borderColor = '#4285F4';
+        datasets[0].tension = 0.2;
+        options = {
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const v = context.parsed.y;
+                  return `${context.label}: ${v}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: { beginAtZero: false },
+            y: { beginAtZero: true }
+          }
+        };
+      }
+      const chart = new Chart(ctx, {
+        type: chartType,
+        data: {
+          labels: data.labels,
+          datasets: datasets
+        },
+        options: options,
+        plugins: (data.chartType === 'bar' || data.chartType === 'bar-vertical') ? [{
+          id: 'customLabels',
+          afterDatasetsDraw: options.plugins.customLabels.afterDatasetsDraw
+        }] : (data.chartType === 'pie' ? [{
+          id: 'customPieLabels',
+          afterDatasetsDraw: options.plugins.customPieLabels.afterDatasetsDraw
+        }] : [])
+      });
+      chartInstances.push({chart, idx});
+    });
+    // Fonction pour mettre à jour la couleur des graphiques
+    window.updateChartsTheme = function() {
+      chartInstances.forEach(({chart, idx}) => {
+        const data = chartDataList[idx];
+        if (data.chartType === 'bar') {
+          chart.data.datasets[0].backgroundColor = themeColor;
+        }
+        if (data.chartType === 'line') {
+          chart.data.datasets[0].borderColor = themeColor;
+        }
+        chart.update();
+      });
+    };
+  </script>
+</body>
+</html>

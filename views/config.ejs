@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Configuration</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7f7; }
+    .config-container { max-width: 400px; margin: 60px auto; background: #fff; padding: 32px 24px; border-radius: 12px; box-shadow: 0 2px 12px #0001; }
+    label { display: block; margin-bottom: 8px; font-weight: bold; }
+    input[type="text"], input[type="color"] { width: 100%; padding: 8px; margin-bottom: 18px; border-radius: 6px; border: 1px solid #ccc; }
+    button { background: #4285F4; color: #fff; border: none; padding: 10px 22px; border-radius: 6px; font-size: 1rem; cursor: pointer; }
+    button:hover { background: #3367d6; }
+  </style>
+</head>
+<body>
+  <div class="config-container">
+    <h2>Configurer l'application</h2>
+    <form action="/config" method="POST" enctype="multipart/form-data">
+      <label for="csvFile">Fichier CSV à charger :</label>
+      <input type="file" id="csvFile" name="csvFile" accept=".csv">
+      <div style="margin:8px 0 18px 0;font-size:0.98em;color:#555;">
+        ou chemin du fichier CSV&nbsp;:
+        <input type="text" id="csvPath" name="csvPath" value="<%= csvPath %>" style="width:100%;margin-top:4px;">
+      </div>
+      <label for="jsonFile">Fichier JSON à charger :</label>
+      <input type="file" id="jsonFile" name="jsonFile" accept=".json">
+      <div style="margin:8px 0 18px 0;font-size:0.98em;color:#555;">
+        ou chemin du fichier JSON&nbsp;:
+        <input type="text" id="jsonPath" name="jsonPath" value="<%= jsonPath || '' %>" style="width:100%;margin-top:4px;">
+      </div>
+      <label for="themeColor">Couleur du thème :</label>
+      <input type="color" id="themeColor" name="themeColor" value="<%= themeColor %>" required>
+      <input type="text" id="themeColorHex" maxlength="7" value="<%= themeColor %>" pattern="#?[0-9A-Fa-f]{6}" style="width:90px;margin-left:8px;text-transform:uppercase;text-align:center;">
+      <button type="submit">Valider</button>
+    </form>
+  </div>
+  <script>
+    const colorInput = document.getElementById('themeColor');
+    const hexInput = document.getElementById('themeColorHex');
+    // Synchronisation color -> hex
+    colorInput.addEventListener('input', function(e) {
+      hexInput.value = e.target.value.toUpperCase();
+    });
+    // Synchronisation hex -> color
+    hexInput.addEventListener('input', function(e) {
+      let val = e.target.value.trim();
+      if (!val.startsWith('#')) val = '#' + val;
+      if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+        colorInput.value = val;
+      }
+    });
+  </script>
+</body>
+</html>
